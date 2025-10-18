@@ -16,6 +16,8 @@
 
     {{-- TAILWINDCSS --}}
     @vite('resources/css/app.css')
+    {{-- <link rel="stylesheet" href="{{ asset('/build/assets/app-DrKqg2nF.css') }}"> --}}
+
     {{-- <link rel="stylesheet" href="{{ asset('dist/assets/app-DrKqg2nF.css') }}"> --}}
     <link rel="stylesheet" href="{{ asset('css1/app.css') }}">
     <link rel="stylesheet" href="{{ asset('css1/lightbox.css') }}">
