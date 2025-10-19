@@ -43,44 +43,38 @@ class DestinasiController extends Controller
         return view('Admin.Destinasi.editDestinasi', compact('destinasi'));
     }
 
-    public function updateDestinasi(Request $request, Destinasi $destinasi)
+    public function updateDestinasi(Request $request, $id)
     {
+        $destinasi = Destinasi::findOrFail($id);
+
+        // cek apakah ada file baru yang diupload
         if ($request->hasFile('img')) {
-            // hapus gambar lama
-            if ($destinasi->img && file_exists(public_path('public/storage/' . $destinasi->img))) {
-                unlink(public_path('public/storage/' . $destinasi->img));
+
+            // hapus file lama kalau ada
+            if ($destinasi->img) {
+                Storage::disk('public')->delete($destinasi->img);
             }
 
-            // simpan gambar baru ke disk 'public'
-            $path = $request->file('img')->store('img-destinasi', 'public');
+            // upload file baru ke folder public/storage/img-destinasi
+            $imgPath = $request->file('img')->store('img-destinasi', 'public');
 
-            // update data
+            // update dengan gambar baru
             $destinasi->update([
-                'img' => $path,
+                'img' => $imgPath,
+                'negara' => $request->negara,
+                'desc' => $request->desc,
+                'link_artikel' => $request->link_artikel,
+            ]);
+        } else {
+            // kalau tidak ada gambar baru
+            $destinasi->update([
+                'negara' => $request->negara,
+                'desc' => $request->desc,
+                'link_artikel' => $request->link_artikel,
             ]);
         }
 
-        if ($request->hasFile('foto')) {
-            if ($destinasi->foto && file_exists(public_path('public/storage/' . $destinasi->foto))) {
-                unlink(public_path('public/storage/' . $destinasi->foto));
-            }
-
-            $pathFoto = $request->file('foto')->store('img-destinasi', 'public');
-
-            $destinasi->update([
-                'foto' => $pathFoto,
-            ]);
-        }
-
-        // update field lainnya
-        $destinasi->update([
-            'negara' => $request->negara,
-            'desc' => $request->desc,
-            'link_artikel' => $request->link_artikel,
-            'slug' => Str::slug($request->negara)
-        ]);
-
-        return redirect()->route('index.destinasi')->with('Update', 'Data Destinasi berhasil diperbarui');
+        return redirect()->route('index.destinasi')->with('Update', "Data $request->negara berhasil diupdate");
     }
 
 
