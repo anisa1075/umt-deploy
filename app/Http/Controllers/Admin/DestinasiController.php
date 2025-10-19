@@ -22,8 +22,8 @@ class DestinasiController extends Controller
     public function tambahDestinasi(Request $request){
 
         Destinasi::create([
-            'img' => $request->file('img')->store('img-destinasi'),
-            'foto' => $request->file('foto')->store('img-destinasi'),
+            'img' => $request->file('img')->store('img-destinasi', 'public'),
+            'foto' => $request->file('foto')->store('img-destinasi', 'public'),
             'negara' => $request->negara,
             'desc' => $request->desc,
             'link_artikel' => $request->link_artikel,
