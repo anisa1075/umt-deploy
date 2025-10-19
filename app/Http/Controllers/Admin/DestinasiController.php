@@ -10,16 +10,19 @@ use Illuminate\Support\Facades\Storage;
 
 class DestinasiController extends Controller
 {
-    public function index(){
+    public function index()
+    {
         $destinasi = Destinasi::all();
         return view('Admin.Destinasi.destinasi', compact('destinasi'));
     }
 
-    public function formDestinasi(){
+    public function formDestinasi()
+    {
         return view('Admin.Destinasi.tambahDestinasi');
     }
 
-    public function tambahDestinasi(Request $request){
+    public function tambahDestinasi(Request $request)
+    {
 
         Destinasi::create([
             'img' => $request->file('img')->store('img-destinasi', 'public'),
@@ -33,59 +36,71 @@ class DestinasiController extends Controller
         return redirect()->route('index.destinasi')->with('Create', "Data Destinasi berhasil ditambahkan");
     }
 
-    public function editDestinasi($id){
+    public function editDestinasi($id)
+    {
         $destinasi = Destinasi::findOrFail($id);
 
         return view('Admin.Destinasi.editDestinasi', compact('destinasi'));
     }
 
-    public function updateDestinasi(Request $request, $id){
+    public function updateDestinasi(Request $request, Destinasi $destinasi)
+    {
+        if ($request->hasFile('img')) {
+            // hapus gambar lama
+            if ($destinasi->img && file_exists(public_path('public/storage/' . $destinasi->img))) {
+                unlink(public_path('public/storage/' . $destinasi->img));
+            }
 
-        $destinasi = Destinasi::findOrFail($id);
+            // simpan gambar baru ke disk 'public'
+            $path = $request->file('img')->store('img-destinasi', 'public');
 
-        // cara pertama atau cara praktis
-        if ($request->hasFile('image')) {
-            // upload img baru
-            $img = $request->file('img');
-            $img->storeAs('public/images' . $img->hashName());
-
-            // Hapus foto lama
-            Storage::delete('public/images/' . $destinasi->img);
-
-            // update dengan gambar baru
+            // update data
             $destinasi->update([
-                'img' => $img->hashName(),
+                'img' => $path,
             ]);
-        } else {
-            // kalau misal nggk up foto, tetap update data yang lain
-            $destinasi->negara = $request->negara;
-            $destinasi->desc = $request->desc;
-            $destinasi->link_artikel = $request->link_artikel;
-            $destinasi->img = $request->file('img')->store('img-destinasi');
-            $destinasi->foto = $request->file('foto')->store('img-destinasi');
-
         }
 
-        // menyimpan data perubahan
-        $destinasi->update();
+        if ($request->hasFile('foto')) {
+            if ($destinasi->foto && file_exists(public_path('public/storage/' . $destinasi->foto))) {
+                unlink(public_path('public/storage/' . $destinasi->foto));
+            }
 
-        return redirect()->route('index.destinasi')->with('Update', "Data $request->negara Berhasil di Update");
+            $pathFoto = $request->file('foto')->store('img-destinasi', 'public');
+
+            $destinasi->update([
+                'foto' => $pathFoto,
+            ]);
+        }
+
+        // update field lainnya
+        $destinasi->update([
+            'negara' => $request->negara,
+            'desc' => $request->desc,
+            'link_artikel' => $request->link_artikel,
+            'slug' => Str::slug($request->negara)
+        ]);
+
+        return redirect()->route('index.destinasi')->with('Update', 'Data Destinasi berhasil diperbarui');
     }
 
-    public function deleteDestinasi($id){
+
+    public function deleteDestinasi($id)
+    {
         $destinasi = Destinasi::findOrFail($id);
         $destinasi->delete();
 
         return redirect()->back()->with('Delete', "Data $destinasi->negara berhasil di hapus");
     }
 
-    public function descDestinasi($id){
+    public function descDestinasi($id)
+    {
         $destinasi = Destinasi::findOrFail($id);
 
         return view('Admin.Destinasi.descDestinasi', compact('destinasi'));
     }
 
-    public function uploadImage(){
+    public function uploadImage()
+    {
         // code upload
         // $post = new Destinasi();
         // $post->id = 0;
@@ -100,7 +115,7 @@ class DestinasiController extends Controller
 
     public function upload(Request $request)
     {
-       if ($request->hasFile('upload')) {
+        if ($request->hasFile('upload')) {
             $originName = $request->file('upload')->getClientOriginalName();
             $fileName = pathinfo($originName, PATHINFO_FILENAME);
             $extension = $request->file('upload')->getClientOriginalExtension();
@@ -109,7 +124,7 @@ class DestinasiController extends Controller
             $request->file('upload')->move(public_path('media'), $fileName);
 
             $url = asset('media/' . $fileName);
-            return response()->json(['fileName' => $fileName, 'uploaded'=> 1, 'url' => $url]);
+            return response()->json(['fileName' => $fileName, 'uploaded' => 1, 'url' => $url]);
         }
     }
 }

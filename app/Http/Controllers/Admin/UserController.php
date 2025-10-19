@@ -33,7 +33,7 @@ class UserController extends Controller
     public function tambahUser(Request $request)
     {
         User::create([
-            'img' => $request->file('img')->store('img-users'),
+            'img' => $request->file('img')->store('img-users', 'public'),
             'name' => $request->name,
             'email' => $request->email,
             'password' => $request->password,
